@@ -51,10 +51,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static int RESULT_LOAD_IMG = 1;
 
-    private static String SERVER_URL_REMOTE = "http://imageupload-tigeruploader.rhcloud.com/upload_image.php";
-
-    private static String SERVER_GALLERY_REMOTE = "http://imageupload-tigeruploader.rhcloud.com/gallery.php";
-
     final private int REQUEST_CODE_ASK_PERMISSIONS = 135;
 
     @Override
@@ -89,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_gallery:
                 checkPermission(new String[] {Manifest.permission.INTERNET}, "Access to Internet");
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(SERVER_GALLERY_REMOTE));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(URLResolver.SERVER_GALLERY_REMOTE));
                 startActivity(browserIntent);
                 return true;
             case R.id.action_load:
@@ -293,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             protected String doInBackground(Void... params) {
                 try {
-                    URL url = new URL(SERVER_URL_REMOTE);
+                    URL url = new URL(URLResolver.SERVER_URL_REMOTE);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setReadTimeout(0);
                     conn.setConnectTimeout(0);
