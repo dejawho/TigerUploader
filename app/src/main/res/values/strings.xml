@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Tiger Uploader</string>
+    <string name="action_gallery_name">Show Uploaded Images</string>
+    <string name="action_load_from_gallery">Open From Gallery</string>
+</resources>

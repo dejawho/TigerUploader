@@ -1,0 +1,15 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.tiger.tigeruploader.MainActivity">
+    <item
+        android:id="@+id/action_load"
+        android:orderInCategory="1"
+        android:title="@string/action_load_from_gallery"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_gallery"
+        android:orderInCategory="2"
+        android:title="@string/action_gallery_name"
+        app:showAsAction="never" />
+</menu>
