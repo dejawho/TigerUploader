@@ -96,6 +96,10 @@
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.0/res/layout/abc_action_mode_close_item_material.xml"
     },
     {
+        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/information.xml",
+        "source": "/Users/marco/StudioProjects/TigerUploader/app/src/main/res/layout/information.xml"
+    },
+    {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/design_navigation_menu.xml",
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/design/23.2.0/res/layout/design_navigation_menu.xml"
     },
@@ -160,12 +164,24 @@
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/design/23.2.0/res/layout/design_layout_tab_text.xml"
     },
     {
-        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/abc_list_menu_item_checkbox.xml",
-        "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.0/res/layout/abc_list_menu_item_checkbox.xml"
+        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/settings.xml",
+        "source": "/Users/marco/StudioProjects/TigerUploader/app/src/main/res/layout/settings.xml"
+    },
+    {
+        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/drawer_upload_item.xml",
+        "source": "/Users/marco/StudioProjects/TigerUploader/app/src/main/res/layout/drawer_upload_item.xml"
     },
     {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/abc_expanded_menu_layout.xml",
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.0/res/layout/abc_expanded_menu_layout.xml"
+    },
+    {
+        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/drawer_list_text.xml",
+        "source": "/Users/marco/StudioProjects/TigerUploader/app/src/main/res/layout/drawer_list_text.xml"
+    },
+    {
+        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/abc_list_menu_item_checkbox.xml",
+        "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.0/res/layout/abc_list_menu_item_checkbox.xml"
     },
     {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/notification_template_lines.xml",

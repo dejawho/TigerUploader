@@ -32,12 +32,12 @@
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/generated/res/pngs/debug/drawable-ldpi/abc_ic_menu_copy_material.png"
     },
     {
-        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/drawable-ldpi-v4/abc_ic_menu_paste_material.png",
-        "source": "/Users/marco/StudioProjects/TigerUploader/app/build/generated/res/pngs/debug/drawable-ldpi/abc_ic_menu_paste_material.png"
-    },
-    {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/drawable-ldpi-v4/abc_ic_go_search_api_material.png",
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/generated/res/pngs/debug/drawable-ldpi/abc_ic_go_search_api_material.png"
+    },
+    {
+        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/drawable-ldpi-v4/abc_ic_menu_paste_material.png",
+        "source": "/Users/marco/StudioProjects/TigerUploader/app/build/generated/res/pngs/debug/drawable-ldpi/abc_ic_menu_paste_material.png"
     },
     {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/drawable-ldpi-v4/abc_ic_voice_search_api_material.png",

@@ -2,4 +2,11 @@
     <string name="app_name">Tiger Uploader</string>
     <string name="action_gallery_name">Show Uploaded Images</string>
     <string name="action_load_from_gallery">Open From Gallery</string>
+    <string-array name="menu_array">
+        <item>Main</item>
+        <item>Settings</item>
+        <item>Information</item>
+    </string-array>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
 </resources>

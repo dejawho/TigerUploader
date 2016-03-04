@@ -128,12 +128,12 @@
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.0/res/drawable-xxhdpi-v4/abc_popup_background_mtrl_mult.9.png"
     },
     {
-        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/drawable-xxhdpi-v4/abc_ic_menu_share_material.png",
-        "source": "/Users/marco/StudioProjects/TigerUploader/app/build/generated/res/pngs/debug/drawable-xxhdpi/abc_ic_menu_share_material.png"
-    },
-    {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/drawable-xxhdpi-v4/abc_ic_star_half_black_16dp.png",
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.0/res/drawable-xxhdpi-v4/abc_ic_star_half_black_16dp.png"
+    },
+    {
+        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/drawable-xxhdpi-v4/abc_ic_menu_share_material.png",
+        "source": "/Users/marco/StudioProjects/TigerUploader/app/build/generated/res/pngs/debug/drawable-xxhdpi/abc_ic_menu_share_material.png"
     },
     {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/drawable-xxhdpi-v4/abc_list_selector_disabled_holo_dark.9.png",

@@ -8,5 +8,11 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionBar">false</item>
     </style>
-
+    <style name="ToolbarColoredArrow" parent="AppTheme">
+        <item name="android:textColorSecondary">@color/colorArrow</item>
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="colorAccent">@color/colorArrow</item>
+        <item name="android:textColorPrimary">@color/colorArrow</item>
+        <item name="actionMenuTextColor">@color/colorArrow</item>
+    </style>
 </resources>
