@@ -1483,7 +1483,7 @@
         <item>Main</item>
         <item>Settings</item>
         <item>Information</item>
-    </string-array><string name="action_load_from_gallery">Open From Gallery</string><string name="drawer_close">Close navigation drawer</string><string name="app_name">Tiger Uploader</string><string name="applicationInfo">Tiger Uploaded is an open source project. For both client and server code visit its <a href="https://github.com/dejawho/TigerUploader">repository</a></string><string name="action_gallery_name">Show Uploaded Images</string><string name="drawer_open">Open navigation drawer</string><string name="usedSpace">"Used Space: %1$sMB"</string></file><file path="/Users/marco/StudioProjects/TigerUploader/app/src/main/res/values/styles.xml" qualifiers=""><style name="ToolbarColoredArrow" parent="AppTheme">
+    </string-array><string name="action_load_from_gallery">Open From Gallery</string><string name="drawer_close">Close navigation drawer</string><string name="app_name">Tiger Uploader</string><string name="applicationInfo">Tiger Uploaded is an open source project released under GLP3. For both client and server code visit this <a href="https://github.com/dejawho/TigerUploader">repository</a>.</string><string name="action_gallery_name">Show Uploaded Images</string><string name="drawer_open">Open navigation drawer</string><string name="usedSpace">"Used Space: %1$sMB"</string></file><file path="/Users/marco/StudioProjects/TigerUploader/app/src/main/res/values/styles.xml" qualifiers=""><style name="ToolbarColoredArrow" parent="AppTheme">
         <item name="android:textColorSecondary">@color/colorArrow</item>
         <item name="android:background">?attr/colorPrimary</item>
         <item name="colorAccent">@color/colorArrow</item>

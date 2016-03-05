@@ -248,15 +248,21 @@ public class MainActivity extends AppCompatActivity {
         } else if (type.startsWith("text/")){
             String textPath = intent.getStringExtra(Intent.EXTRA_TEXT);
             imageUri = Uri.parse(textPath);
+            //Try to found a valid scheme for the text
             if (imageUri.getScheme() == null){
                 if (new File(textPath).exists()){
                     imageUri = Uri.parse("file://"+textPath);
+                } else {
+                    imageUri = Uri.parse("http://"+textPath);
+                }
+            }
+            if (imageUri.getScheme() != null){
+                if (imageUri.getScheme().startsWith("file")){
                     loadImage();
                     showImageIntoView();
                     checkPath();
-                } else {
+                } else if (imageUri.getScheme().startsWith("http")){
                     //The http uri need to be loaded into a separate thread
-                    imageUri = Uri.parse("http://"+textPath);
                     new AsyncTask<Void, Void, String>() {
 
                         @Override
@@ -269,6 +275,10 @@ public class MainActivity extends AppCompatActivity {
                         protected void onPostExecute(String s) {
                             showImageIntoView();
                             checkPath();
+                            if (fileName == null || fileByteData == null){
+                                //something went wrong while loading, show a message
+                                Toast.makeText(getApplicationContext(), "The provided text must be a file or http URL", Toast.LENGTH_LONG).show();
+                            }
                         }
                     }.execute(null, null, null);
                 }
@@ -315,8 +325,9 @@ public class MainActivity extends AppCompatActivity {
                 fileName =  new File(imageUri.getPath()).getName();
             }
         } catch (Exception ex){
-            ACRA.getErrorReporter().handleException(ex);
-            Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            fileByteData = null;
+            fileName = null;
+            imageUri = null;
         }
     }
 
@@ -341,6 +352,8 @@ public class MainActivity extends AppCompatActivity {
             if (imageUri != null && imgView != null) {
                 imgView.getSettings().setBuiltInZoomControls(true);
                 imgView.loadUrl(imageUri.toString());
+            } else {
+                imgView.loadUrl("about:blank");
             }
         }
     }

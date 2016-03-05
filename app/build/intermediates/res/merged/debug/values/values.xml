@@ -288,7 +288,7 @@
     <string name="action_load_from_gallery">Open From Gallery</string>
     <string name="app_name">Tiger Uploader</string>
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
-    <string name="applicationInfo">Tiger Uploaded is an open source project. For both client and server code visit its <a href="https://github.com/dejawho/TigerUploader">repository</a></string>
+    <string name="applicationInfo">Tiger Uploaded is an open source project released under GLP3. For both client and server code visit this <a href="https://github.com/dejawho/TigerUploader">repository</a>.</string>
     <string name="bottom_sheet_behavior" translatable="false">android.support.design.widget.BottomSheetBehavior</string>
     <string name="character_counter_pattern" translatable="false">%1$d / %2$d</string>
     <string name="drawer_close">Close navigation drawer</string>
