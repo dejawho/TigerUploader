@@ -1,12 +1,28 @@
+/** This file is part of TigerUploader, located at
+ * https://github.com/dejawho/TigerUploader
+
+ TigerUploader is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Foobar is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.**/
 package com.tiger.tigeruploader;
 
 import android.os.AsyncTask;
+
+import org.acra.ACRA;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -140,39 +156,16 @@ public class ServerCaller {
 
     }
 
-
     public void sendFile(File file){
-        sendFile(convertToByte(file), file.getName());
+        sendFile(Utility.convertFileToByteData(file), file.getName());
     }
-
-    protected byte[] convertToByte(File file){
-        byte[] b = null;
-        FileInputStream fileInputStream = null;
-        try {
-            fileInputStream = new FileInputStream(file);
-            b = new byte[(int) file.length()];
-            fileInputStream.read(b);
-        } catch (Exception ex) {
-            b = null;
-        } finally {
-            if (fileInputStream != null){
-                try {
-                    fileInputStream.close();
-                } catch (Exception ex){
-
-                }
-            }
-        }
-        return b;
-    }
-
 
     public void setConnectionTimeout(int connectionTimeout){
         this.connectionTimeout = connectionTimeout;
     }
 
     public void onException(Exception ex){
-
+        ACRA.getErrorReporter().handleException(ex);
     }
 
     public void onPostExecute(String response, int responseCode){

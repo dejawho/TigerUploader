@@ -1,3 +1,18 @@
+/** This file is part of TigerUploader, located at
+ * https://github.com/dejawho/TigerUploader
+
+ TigerUploader is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Foobar is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.**/
 package com.tiger.tigeruploader;
 
 import android.Manifest;
@@ -17,9 +32,11 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.method.LinkMovementMethod;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -28,15 +45,16 @@ import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import org.acra.ACRA;
+
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -66,30 +84,36 @@ public class MainActivity extends AppCompatActivity {
 
     private PreferenceManager preferenceManager;
 
-    private View.OnClickListener saveSettingListener= new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            EditText baseURL=(EditText)findViewById(R.id.baseURL);
-            EditText uploadPage=(EditText)findViewById(R.id.uploadPage);
-            EditText galleryPage=(EditText)findViewById(R.id.galleryPage);
-            EditText sizePage=(EditText)findViewById(R.id.sizePage);
-            EditText httpTimeout=(EditText)findViewById(R.id.httpTimeout);
-
-            preferenceManager.storeValue(URLResolver.BASE_URL_PREF_KEY, baseURL.getText().toString());
-            preferenceManager.storeValue(URLResolver.GALLERY_PAGE_PREF_KEY, galleryPage.getText().toString());
-            preferenceManager.storeValue(URLResolver.HTTP_TIMEOUT_PREF_KEY, httpTimeout.getText().toString());
-            preferenceManager.storeValue(URLResolver.SIZE_PAGE_PREF_KEY, sizePage.getText().toString());
-            preferenceManager.storeValue(URLResolver.UPLOAD_PAGE_PREF_KEY, uploadPage.getText().toString());
-
-            Toast.makeText(MainActivity.this,"Preferences Saved",Toast.LENGTH_LONG).show();
-        }
-    };
-
     private ListView.OnItemClickListener entryListListener =  new ListView.OnItemClickListener() {
 
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long id) {
             selectItem(position);
+        }
+    };
+
+    private View.OnClickListener saveSettingListener= new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            try {
+                EditText baseURL = (EditText) findViewById(R.id.baseURL);
+                EditText uploadPage = (EditText) findViewById(R.id.uploadPage);
+                EditText galleryPage = (EditText) findViewById(R.id.galleryPage);
+                EditText sizePage = (EditText) findViewById(R.id.sizePage);
+                EditText httpTimeout = (EditText) findViewById(R.id.httpTimeout);
+                CheckBox showPreview = (CheckBox) findViewById(R.id.showPreview);
+
+                preferenceManager.storeValue(URLResolver.BASE_URL_PREF_KEY, baseURL.getText().toString());
+                preferenceManager.storeValue(URLResolver.GALLERY_PAGE_PREF_KEY, galleryPage.getText().toString());
+                preferenceManager.storeValue(URLResolver.HTTP_TIMEOUT_PREF_KEY, httpTimeout.getText().toString());
+                preferenceManager.storeValue(URLResolver.SIZE_PAGE_PREF_KEY, sizePage.getText().toString());
+                preferenceManager.storeValue(URLResolver.UPLOAD_PAGE_PREF_KEY, uploadPage.getText().toString());
+                preferenceManager.setShowPreview(showPreview.isChecked());
+                Toast.makeText(MainActivity.this, "Preferences Saved", Toast.LENGTH_LONG).show();
+            } catch (Exception ex){
+                ACRA.getErrorReporter().handleException(ex);
+                Toast.makeText(MainActivity.this, "Something went wrong while saving", Toast.LENGTH_LONG).show();
+            }
         }
     };
 
@@ -99,55 +123,63 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         prgDialog = new ProgressDialog(this);
 
-        mTitle = getTitle();
+        //provide the permission
+        PermissionHandler.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE, this);
+        PermissionHandler.checkPermission(Manifest.permission.INTERNET, this);
+        try {
+            preferenceManager = new PreferenceManager(this);
+            mTitle = getTitle();
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+            Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+            toolbar.setOverflowIcon(getDrawable(R.mipmap.ic_more_vert_white_24dp));
+            setSupportActionBar(toolbar);
 
-        mPlanetTitles = getResources().getStringArray(R.array.menu_array);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+            mPlanetTitles = getResources().getStringArray(R.array.menu_array);
+            mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+            mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
-        // set up the drawer's list view with items and click listener
-        mDrawerList.setAdapter(new ArrayAdapter<>(this, R.layout.drawer_list_text, mPlanetTitles));
-        mDrawerList.setOnItemClickListener(entryListListener);
+            // set up the drawer's list view with items and click listener
+            mDrawerList.setAdapter(new ArrayAdapter<>(this, R.layout.drawer_list_text, mPlanetTitles));
+            mDrawerList.setOnItemClickListener(entryListListener);
 
-        // enable ActionBar app icon to behave as action to toggle nav drawer
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.mipmap.ic_drawer);
-        getSupportActionBar().setHomeButtonEnabled(true);
+            // enable ActionBar app icon to behave as action to toggle nav drawer
+            ActionBar supportBar = getSupportActionBar();
+            supportBar.setDisplayHomeAsUpEnabled(true);
+            supportBar.setHomeAsUpIndicator(R.mipmap.ic_menu_white_24dp);
+            supportBar.setHomeButtonEnabled(true);
 
-        // ActionBarDrawerToggle ties together the the proper interactions
-        // between the sliding drawer and the action bar app icon
-        ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.drawer_open, R.string.drawer_close) {
-            public void onDrawerClosed(View view) {
-                getSupportActionBar().setTitle(mTitle);
-                invalidateOptionsMenu();
+            // ActionBarDrawerToggle ties together the the proper interactions
+            // between the sliding drawer and the action bar app icon
+            ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.drawer_open, R.string.drawer_close) {
+                public void onDrawerClosed(View view) {
+                    getSupportActionBar().setTitle(mTitle);
+                    invalidateOptionsMenu();
+                }
+
+                public void onDrawerOpened(View drawerView) {
+                    getSupportActionBar().setTitle(mTitle);
+                    invalidateOptionsMenu();
+                }
+            };
+            mDrawerLayout.addDrawerListener(mDrawerToggle);
+
+            if (savedInstanceState == null) {
+                selectItem(0);
             }
 
-            public void onDrawerOpened(View drawerView) {
-                getSupportActionBar().setTitle(mTitle);
-                invalidateOptionsMenu();
+            // Set Cancelable as False
+            prgDialog.setCancelable(false);
+
+            //Check if it was opened by another app
+            Intent intent = getIntent();
+            String action = intent.getAction();
+            String type = intent.getType();
+            if (Intent.ACTION_SEND.equals(action) && type != null) {
+                handleIntent(intent, type);
             }
-        };
-        mDrawerLayout.addDrawerListener(mDrawerToggle);
-
-        if (savedInstanceState == null) {
-            selectItem(0);
+        } catch (Exception ex){
+            ACRA.getErrorReporter().handleException(ex);
         }
-
-        // Set Cancelable as False
-        prgDialog.setCancelable(false);
-        PermissionHandler.checkPermission(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, "Read SD Card", this);
-        PermissionHandler.checkPermission(new String[] {Manifest.permission.INTERNET}, "Access to Internet", this);
-        Intent intent = getIntent();
-        String action = intent.getAction();
-        String type = intent.getType();
-        if (Intent.ACTION_SEND.equals(action) && type != null) {
-           handleIntent(intent, type);
-        }
-
-        preferenceManager = new PreferenceManager(this);
     }
 
     @Override
@@ -159,21 +191,40 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
-        switch (item.getItemId()) {
-            case R.id.action_gallery:
-                String galleryURL = URLResolver.getGalleryPageURL(preferenceManager);
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(galleryURL));
-                startActivity(browserIntent);
-                return true;
-            case R.id.action_load:
-                // Create intent to Open Image applications like Gallery, Google Photos
-                Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                // Start the Intent
-                startActivityForResult(galleryIntent, RESULT_LOAD_IMG);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        try {
+            switch (item.getItemId()) {
+                case R.id.action_gallery:
+                    String galleryURL = URLResolver.getGalleryPageURL(preferenceManager);
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(galleryURL));
+                    startActivity(browserIntent);
+                    return true;
+                case R.id.action_load:
+                    // Create intent to Open Image applications like Gallery, Google Photos
+                    Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    // Start the Intent
+                    startActivityForResult(galleryIntent, RESULT_LOAD_IMG);
+                    return true;
+                default:
+                    return super.onOptionsItemSelected(item);
+            }
+        } catch (Exception ex){
+            ACRA.getErrorReporter().handleException(ex);
+            return false;
+        }
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        mTitle = title;
+        getSupportActionBar().setTitle(mTitle);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Dismiss the progress bar when application is closed
+        if (prgDialog != null) {
+            prgDialog.dismiss();
         }
     }
 
@@ -229,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             InputStream stream = getContentResolver().openInputStream(imageUri);
             if (stream != null) {
-                fileByteData = convertStreamToByteData(stream);
+                fileByteData = Utility.convertStreamToByteData(stream);
                 String currentFileName = null;
                 //Try to get the name
                 String[] filePathColumn = {MediaStore.Images.Media.DATA};
@@ -250,6 +301,7 @@ public class MainActivity extends AppCompatActivity {
                 fileName = currentFileName;
             }
         } catch (Exception ex){
+            ACRA.getErrorReporter().handleException(ex);
             Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
         }
     }
@@ -259,10 +311,11 @@ public class MainActivity extends AppCompatActivity {
             URL url = new URL(imageUri.toString());
             InputStream stream = url.openStream();
             if (stream != null) {
-                fileByteData = convertStreamToByteData(stream);
+                fileByteData = Utility.convertStreamToByteData(stream);
                 fileName =  new File(imageUri.getPath()).getName();
             }
         } catch (Exception ex){
+            ACRA.getErrorReporter().handleException(ex);
             Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
         }
     }
@@ -276,17 +329,19 @@ public class MainActivity extends AppCompatActivity {
                 File fileResource = new File(imgPath);
                 if (fileResource.exists()){
                     fileName = fileResource.getName();
-                    fileByteData = convertFileToByteData(fileResource);
+                    fileByteData = Utility.convertFileToByteData(fileResource);
                 }
             }
         }
     }
 
     protected void showImageIntoView(){
-        WebView imgView = (WebView) findViewById(R.id.imgView);
-        if (imageUri != null && imgView != null) {
-            imgView.getSettings().setBuiltInZoomControls(true);
-            imgView.loadUrl(imageUri.toString());
+        if (preferenceManager.isShowPreview()) {
+            WebView imgView = (WebView) findViewById(R.id.imgView);
+            if (imageUri != null && imgView != null) {
+                imgView.getSettings().setBuiltInZoomControls(true);
+                imgView.loadUrl(imageUri.toString());
+            }
         }
     }
 
@@ -306,7 +361,8 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "You haven't picked Image", Toast.LENGTH_LONG).show();
             }
             checkPath();
-        } catch (Exception e) {
+        } catch (Exception ex) {
+            ACRA.getErrorReporter().handleException(ex);
             Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG).show();
         }
 
@@ -345,15 +401,14 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onException(Exception ex) {
+                super.onException(ex);
                 Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onPostExecute(String response, int responseCode) {
                 prgDialog.hide();
-                // When the loop is finished, updates the notification
-                mBuilder.setContentText("Upload complete").setProgress(0, 0, false);
-                mNotifyManager.notify(PermissionHandler.APP_ID, mBuilder.build());
+                mNotifyManager.cancel(PermissionHandler.APP_ID);
                 if (responseCode == HttpsURLConnection.HTTP_OK) {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                     ClipData clip = ClipData.newPlainText("link", response);
@@ -376,140 +431,99 @@ public class MainActivity extends AppCompatActivity {
         uploadServer.sendFile(fileByteData, fileName);
     }
 
-    public void getInformation() {
-        prgDialog.setMessage("Requesting used space");
-        String sizeURL = URLResolver.getSizePageURL(preferenceManager);
-        ServerCaller uploadServer = new ServerCaller(sizeURL){
-            @Override
-            public void onException(Exception ex) {
-                Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-            }
+    public void showInformation() {
+        try {
+            TextView informationLabel = (TextView) findViewById(R.id.informationLabel);
+            informationLabel.setMovementMethod(LinkMovementMethod.getInstance());
 
-            @Override
-            public void onPostExecute(String response, int responseCode) {
-                prgDialog.hide();
-                TextView txtView = (TextView) findViewById(R.id.spaceControl);
-                if (txtView != null) {
-                    int size = Integer.parseInt(response);
-                    double mbSize = (double)size / 1024 / 1024;
-                    txtView.setText("Used Space: " + String.format("%.2f", mbSize) + "MB");
+            TextView spaceLabel = (TextView) findViewById(R.id.spaceControl);
+            spaceLabel.setText("Sending used space request to the server...");
+
+            String sizeURL = URLResolver.getSizePageURL(preferenceManager);
+            ServerCaller uploadServer = new ServerCaller(sizeURL) {
+                @Override
+                public void onException(Exception ex) {
+                    super.onException(ex);
+                    Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 }
-            }
-        };
-        int connectionTimeOut = Integer.parseInt(preferenceManager.getValueString(URLResolver.HTTP_TIMEOUT_PREF_KEY));
-        uploadServer.setConnectionTimeout(connectionTimeOut);
-        uploadServer.sendCall("");
+
+                @Override
+                public void onPostExecute(String response, int responseCode) {
+                    TextView spaceLabel = (TextView) findViewById(R.id.spaceControl);
+                    if (spaceLabel != null) {
+                        int size = Integer.parseInt(response);
+                        double mbSize = (double) size / 1024 / 1024;
+                        String value = String.format("%.2f", mbSize);
+                        spaceLabel.setText(String.format(getString(R.string.usedSpace), value));
+                    }
+                }
+            };
+            int connectionTimeOut = Integer.parseInt(preferenceManager.getValueString(URLResolver.HTTP_TIMEOUT_PREF_KEY));
+            uploadServer.setConnectionTimeout(connectionTimeOut);
+            uploadServer.sendCall("");
+        } catch (Exception ex){
+            ACRA.getErrorReporter().handleException(ex);
+        }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Dismiss the progress bar when application is closed
-        if (prgDialog != null) {
-            prgDialog.dismiss();
+    protected void showSettings(){
+        try {
+            EditText baseURL = (EditText) findViewById(R.id.baseURL);
+            EditText uploadPage = (EditText) findViewById(R.id.uploadPage);
+            EditText galleryPage = (EditText) findViewById(R.id.galleryPage);
+            EditText sizePage = (EditText) findViewById(R.id.sizePage);
+            EditText httpTimeout = (EditText) findViewById(R.id.httpTimeout);
+            CheckBox showPreview = (CheckBox) findViewById(R.id.showPreview);
+
+            baseURL.setText(preferenceManager.getValueString(URLResolver.BASE_URL_PREF_KEY));
+            uploadPage.setText(preferenceManager.getValueString(URLResolver.UPLOAD_PAGE_PREF_KEY));
+            galleryPage.setText(preferenceManager.getValueString(URLResolver.GALLERY_PAGE_PREF_KEY));
+            sizePage.setText(preferenceManager.getValueString(URLResolver.SIZE_PAGE_PREF_KEY));
+            httpTimeout.setText(preferenceManager.getValueString(URLResolver.HTTP_TIMEOUT_PREF_KEY));
+            showPreview.setChecked(preferenceManager.isShowPreview());
+
+            Button saveButton = (Button) findViewById(R.id.saveButton);
+            saveButton.setOnClickListener(saveSettingListener);
+        } catch (Exception ex){
+            ACRA.getErrorReporter().handleException(ex);
         }
     }
 
     /** Swaps fragments in the main content view */
     private void selectItem(int position) {
+        try {
+            // Create a new fragment and specify the planet to show based on position
+            Fragment fragment = new ViewFragment() {
 
-        // Create a new fragment and specify the planet to show based on position
-        Fragment fragment = new ViewFragment(){
-
-            @Override
-            public void onViewCreated(View view, Bundle savedInstanceState) {
-                super.onViewCreated(view, savedInstanceState);
-                int index = getArguments().getInt(ARG_ENTRY_NUMBER);
-                if (index == 0) {
-                    showImageIntoView();
-                    checkPath();
-                } else if (index == 1){
-                    initializeSettingsView();
-                } else if (index == 2){
-                    getInformation();
+                @Override
+                public void onViewCreated(View view, Bundle savedInstanceState) {
+                    super.onViewCreated(view, savedInstanceState);
+                    int index = getArguments().getInt(ARG_ENTRY_NUMBER);
+                    if (index == 0) {
+                        showImageIntoView();
+                        checkPath();
+                    } else if (index == 1) {
+                        showSettings();
+                    } else if (index == 2) {
+                        showInformation();
+                    }
                 }
-            }
-        };
+            };
 
-        Bundle args = new Bundle();
-        args.putInt(ViewFragment.ARG_ENTRY_NUMBER, position);
-        fragment.setArguments(args);
+            Bundle args = new Bundle();
+            args.putInt(ViewFragment.ARG_ENTRY_NUMBER, position);
+            fragment.setArguments(args);
 
-        // Insert the fragment by replacing any existing fragment
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+            // Insert the fragment by replacing any existing fragment
+            FragmentManager fragmentManager = getFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
 
-        // Highlight the selected item, update the title, and close the drawer
-        mDrawerList.setItemChecked(position, true);
-        setTitle(mPlanetTitles[position]);
-        mDrawerLayout.closeDrawer(mDrawerList);
-    }
-
-    @Override
-    public void setTitle(CharSequence title) {
-        mTitle = title;
-        getSupportActionBar().setTitle(mTitle);
-    }
-
-    protected void initializeSettingsView(){
-        EditText baseURL=(EditText)findViewById(R.id.baseURL);
-        EditText uploadPage=(EditText)findViewById(R.id.uploadPage);
-        EditText galleryPage=(EditText)findViewById(R.id.galleryPage);
-        EditText sizePage=(EditText)findViewById(R.id.sizePage);
-        EditText httpTimeout=(EditText)findViewById(R.id.httpTimeout);
-        baseURL.setText(preferenceManager.getValueString(URLResolver.BASE_URL_PREF_KEY));
-        uploadPage.setText(preferenceManager.getValueString(URLResolver.UPLOAD_PAGE_PREF_KEY));
-        galleryPage.setText(preferenceManager.getValueString(URLResolver.GALLERY_PAGE_PREF_KEY));
-        sizePage.setText(preferenceManager.getValueString(URLResolver.SIZE_PAGE_PREF_KEY));
-        httpTimeout.setText(preferenceManager.getValueString(URLResolver.HTTP_TIMEOUT_PREF_KEY));
-
-        Button saveButton = (Button)findViewById(R.id.saveButton);
-        saveButton.setOnClickListener(saveSettingListener);
-    }
-
-    private byte[] convertFileToByteData(File file) {
-        byte[] bFile = new byte[(int) file.length()];
-        try {
-            //convert file into array of bytes
-            FileInputStream fileInputStream = new FileInputStream(file);
-            fileInputStream.read(bFile);
-            fileInputStream.close();
-
-        }catch(Exception e){
-            e.printStackTrace();
-            return null;
+            // Highlight the selected item, update the title, and close the drawer
+            mDrawerList.setItemChecked(position, true);
+            setTitle(mPlanetTitles[position]);
+            mDrawerLayout.closeDrawer(mDrawerList);
+        } catch (Exception ex){
+            ACRA.getErrorReporter().handleException(ex);
         }
-        return bFile;
     }
-
-    private byte[] convertStreamToByteData(InputStream file) throws IOException {
-        byte[] bFile = new byte[file.available()];
-        //convert file into array of bytes
-        file.read(bFile);
-        file.close();
-        return bFile;
-    }
-
-    /*private String getStreamDigest(byte[] stream){
-        try {
-            // Create MD5 Hash
-            MessageDigest digest = MessageDigest.getInstance("MD5");
-            digest.update(stream);
-            byte messageDigest[] = digest.digest();
-
-            // Create Hex String
-            StringBuffer hexString = new StringBuffer();
-            for (int i = 0; i < messageDigest.length; i++) {
-                String h = Integer.toHexString(0xFF & messageDigest[i]);
-                while (h.length() < 2)
-                    h = "0" + h;
-                hexString.append(h);
-            }
-            return hexString.toString();
-
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return String.valueOf(System.currentTimeMillis());
-    }*/
 }

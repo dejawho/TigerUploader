@@ -48,6 +48,10 @@
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.2.0/res/layout/abc_screen_toolbar.xml"
     },
     {
+        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/upload.xml",
+        "source": "/Users/marco/StudioProjects/TigerUploader/app/src/main/res/layout/upload.xml"
+    },
+    {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/design_navigation_item_subheader.xml",
         "source": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/exploded-aar/com.android.support/design/23.2.0/res/layout/design_navigation_item_subheader.xml"
     },
@@ -166,10 +170,6 @@
     {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/settings.xml",
         "source": "/Users/marco/StudioProjects/TigerUploader/app/src/main/res/layout/settings.xml"
-    },
-    {
-        "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/drawer_upload_item.xml",
-        "source": "/Users/marco/StudioProjects/TigerUploader/app/src/main/res/layout/drawer_upload_item.xml"
     },
     {
         "merged": "/Users/marco/StudioProjects/TigerUploader/app/build/intermediates/res/merged/debug/layout/abc_expanded_menu_layout.xml",
