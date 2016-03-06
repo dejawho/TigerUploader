@@ -33,14 +33,14 @@ public class Utility {
             b = new byte[(int) file.length()];
             fileInputStream.read(b);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            TigerApplication.ShowException(ex);
             b = null;
         } finally {
             if (fileInputStream != null){
                 try {
                     fileInputStream.close();
                 } catch (Exception ex){
-                    ex.printStackTrace();
+                    TigerApplication.ShowException(ex);
                 }
             }
         }
@@ -54,6 +54,7 @@ public class Utility {
         file.close();
         return bFile;
     }
+
 
     public static String getStreamDigest(byte[] stream){
         try {
@@ -73,7 +74,7 @@ public class Utility {
             return hexString.toString();
 
         } catch (NoSuchAlgorithmException ex) {
-            ex.printStackTrace();
+            TigerApplication.ShowException(ex);
         }
         return String.valueOf(System.currentTimeMillis());
     }

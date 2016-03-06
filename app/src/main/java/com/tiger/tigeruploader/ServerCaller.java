@@ -15,14 +15,19 @@
  along with Foobar.  If not, see <http://www.gnu.org/licenses/>.**/
 package com.tiger.tigeruploader;
 
+import android.content.Context;
 import android.os.AsyncTask;
 
 import org.acra.ACRA;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -160,12 +165,63 @@ public class ServerCaller {
         sendFile(Utility.convertFileToByteData(file), file.getName());
     }
 
+    public static byte[] downloadFile(String address) {
+        InputStream input = null;
+        ByteArrayOutputStream output = null;
+        HttpURLConnection connection = null;
+        byte[] result = null;
+        try {
+            URL url = new URL(address);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.connect();
+
+            // expect HTTP 200 OK, so we don't mistakenly save error report
+            // instead of the file
+            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                return  null;
+            }
+
+            // this will be useful to display download percentage
+            // might be -1: server did not report the length
+            int fileLength = connection.getContentLength();
+
+            // download the file
+            input = connection.getInputStream();
+            output = new ByteArrayOutputStream();
+
+            byte data[] = new byte[4096];
+            long total = 0;
+            int count;
+            while ((count = input.read(data)) != -1) {
+                total += count;
+                output.write(data, 0, count);
+            }
+            result = output.toByteArray();
+        } catch (Exception e) {
+            TigerApplication.ShowException(e);
+        } finally {
+            try {
+                if (output != null)
+                    output.close();
+                if (input != null)
+                    input.close();
+            } catch (IOException ignored) {
+            }
+
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+        return result;
+    }
+
+
     public void setConnectionTimeout(int connectionTimeout){
         this.connectionTimeout = connectionTimeout;
     }
 
     public void onException(Exception ex){
-        ACRA.getErrorReporter().handleException(ex);
+        TigerApplication.ShowException(ex);
     }
 
     public void onPostExecute(String response, int responseCode){

@@ -16,6 +16,8 @@
 package com.tiger.tigeruploader;
 
 import android.app.Application;
+import android.content.Context;
+import android.util.Log;
 
 import org.acra.ACRA;
 import org.acra.annotation.ReportsCrashes;
@@ -24,8 +26,16 @@ import org.acra.annotation.ReportsCrashes;
 public class TigerApplication extends Application {
 
     @Override
-    public void onCreate() {
-        super.onCreate();
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+
+        // The following line triggers the initialization of ACRA
         ACRA.init(this);
+    }
+
+    public static void ShowException(Exception ex){
+        ACRA.getErrorReporter().handleException(ex);
+        Log.e("exception", ex.getLocalizedMessage(), ex);
+        //ex.printStackTrace();
     }
 }

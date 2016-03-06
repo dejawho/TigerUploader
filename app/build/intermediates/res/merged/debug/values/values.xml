@@ -288,12 +288,28 @@
     <string name="action_load_from_gallery">Open From Gallery</string>
     <string name="app_name">Tiger Uploader</string>
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
-    <string name="applicationInfo">Tiger Uploaded is an open source project released under GLP3. For both client and server code visit this <a href="https://github.com/dejawho/TigerUploader">repository</a>.</string>
+    <string name="applicationInfo">Tiger Uploaded is an open source project released under GPL3. For both client and server code visit this <a href="https://github.com/dejawho/TigerUploader">repository</a>.</string>
     <string name="bottom_sheet_behavior" translatable="false">android.support.design.widget.BottomSheetBehavior</string>
     <string name="character_counter_pattern" translatable="false">%1$d / %2$d</string>
+    <string name="convertingToBytedataMessage">Converting Image to Binary Data</string>
     <string name="drawer_close">Close navigation drawer</string>
     <string name="drawer_open">Open navigation drawer</string>
+    <string name="errorButtonPress">You must load image before you try to upload</string>
+    <string name="errorInvalidImage">The URL must point to an image file. The received link is: %1$s</string>
+    <string name="errorInvalidJSON">The server response is not a valid JSON</string>
+    <string name="errorNoImageSelectedFromGallery">You haven\'t picked Image</string>
+    <string name="errorProtocol">The provided text must be a file or http URL</string>
+    <string name="errorServerCode">Server Error, HTTP code: %1$s</string>
+    <string name="errorServerMessage">Server has returned the following error: %1$s</string>
+    <string name="errorServerNotFound">Requested resource not found</string>
+    <string name="errorUnableToDownload">Unable to download the selected resource</string>
+    <string name="preferencesSaveError">Something went wrong while saving</string>
+    <string name="preferencesSaveSuccess">Preferences Saved</string>
+    <string name="sendingFileMessage">Sending File</string>
+    <string name="sendingSpaceRequest">Sending used space request to the server...</string>
     <string name="status_bar_notification_info_overflow">999+</string>
+    <string name="successMessage">Link Copied into the Clipboard: %1$s</string>
+    <string name="uploadInProgressMessage">Upload in progress</string>
     <string name="usedSpace">"Used Space: %1$sMB"</string>
     <style name="AlertDialog.AppCompat" parent="Base.AlertDialog.AppCompat"/>
     <style name="AlertDialog.AppCompat.Light" parent="Base.AlertDialog.AppCompat.Light"/>

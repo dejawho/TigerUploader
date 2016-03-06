@@ -2273,9 +2273,10 @@ containing a value of this type.
         public static final int abc_textfield_search_activated_mtrl_alpha=0x7f020048;
         public static final int abc_textfield_search_default_mtrl_alpha=0x7f020049;
         public static final int abc_textfield_search_material=0x7f02004a;
-        public static final int design_fab_background=0x7f02004b;
-        public static final int design_snackbar_background=0x7f02004c;
-        public static final int notification_template_icon_bg=0x7f02004d;
+        public static final int cloud_upload=0x7f02004b;
+        public static final int design_fab_background=0x7f02004c;
+        public static final int design_snackbar_background=0x7f02004d;
+        public static final int notification_template_icon_bg=0x7f02004e;
     }
     public static final class id {
         public static final int action0=0x7f0d0077;
@@ -2533,10 +2534,26 @@ containing a value of this type.
         public static final int applicationInfo=0x7f060018;
         public static final int bottom_sheet_behavior=0x7f060019;
         public static final int character_counter_pattern=0x7f06001a;
-        public static final int drawer_close=0x7f06001b;
-        public static final int drawer_open=0x7f06001c;
+        public static final int convertingToBytedataMessage=0x7f06001b;
+        public static final int drawer_close=0x7f06001c;
+        public static final int drawer_open=0x7f06001d;
+        public static final int errorButtonPress=0x7f06001e;
+        public static final int errorInvalidImage=0x7f06001f;
+        public static final int errorInvalidJSON=0x7f060020;
+        public static final int errorNoImageSelectedFromGallery=0x7f060021;
+        public static final int errorProtocol=0x7f060022;
+        public static final int errorServerCode=0x7f060023;
+        public static final int errorServerMessage=0x7f060024;
+        public static final int errorServerNotFound=0x7f060025;
+        public static final int errorUnableToDownload=0x7f060026;
+        public static final int preferencesSaveError=0x7f060027;
+        public static final int preferencesSaveSuccess=0x7f060028;
+        public static final int sendingFileMessage=0x7f060029;
+        public static final int sendingSpaceRequest=0x7f06002a;
         public static final int status_bar_notification_info_overflow=0x7f060013;
-        public static final int usedSpace=0x7f06001d;
+        public static final int successMessage=0x7f06002b;
+        public static final int uploadInProgressMessage=0x7f06002c;
+        public static final int usedSpace=0x7f06002d;
     }
     public static final class style {
         public static final int AlertDialog_AppCompat=0x7f090087;

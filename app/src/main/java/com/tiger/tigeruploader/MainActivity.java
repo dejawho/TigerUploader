@@ -19,6 +19,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.ClipData;
@@ -51,13 +52,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
-import org.acra.ACRA;
-
 import java.io.File;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -109,10 +106,10 @@ public class MainActivity extends AppCompatActivity {
                 preferenceManager.storeValue(URLResolver.SIZE_PAGE_PREF_KEY, sizePage.getText().toString());
                 preferenceManager.storeValue(URLResolver.UPLOAD_PAGE_PREF_KEY, uploadPage.getText().toString());
                 preferenceManager.setShowPreview(showPreview.isChecked());
-                Toast.makeText(MainActivity.this, "Preferences Saved", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, getString(R.string.preferencesSaveSuccess), Toast.LENGTH_LONG).show();
             } catch (Exception ex){
-                ACRA.getErrorReporter().handleException(ex);
-                Toast.makeText(MainActivity.this, "Something went wrong while saving", Toast.LENGTH_LONG).show();
+                TigerApplication.ShowException(ex);
+                Toast.makeText(MainActivity.this, getString(R.string.preferencesSaveError), Toast.LENGTH_LONG).show();
             }
         }
     };
@@ -163,9 +160,7 @@ public class MainActivity extends AppCompatActivity {
             };
             mDrawerLayout.addDrawerListener(mDrawerToggle);
 
-            if (savedInstanceState == null) {
-                selectItem(0);
-            }
+            selectItem(0);
 
             // Set Cancelable as False
             prgDialog.setCancelable(false);
@@ -178,7 +173,21 @@ public class MainActivity extends AppCompatActivity {
                 handleIntent(intent, type);
             }
         } catch (Exception ex){
-            ACRA.getErrorReporter().handleException(ex);
+            TigerApplication.ShowException(ex);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        try {
+            selectItem(0);
+            String action = intent.getAction();
+            String type = intent.getType();
+            if (Intent.ACTION_SEND.equals(action) && type != null) {
+                handleIntent(intent, type);
+            }
+        } catch (Exception ex){
+            TigerApplication.ShowException(ex);
         }
     }
 
@@ -208,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
                     return super.onOptionsItemSelected(item);
             }
         } catch (Exception ex){
-            ACRA.getErrorReporter().handleException(ex);
+            TigerApplication.ShowException(ex);
             return false;
         }
     }
@@ -239,6 +248,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    protected boolean checkUrlExtension(String url){
+        if(url.contains(".")) {
+            String extension = url.substring(url.lastIndexOf(".") + 1).toLowerCase().trim();
+            if (PreferenceManager.ALLOWED_EXTENSIONS.contains(extension)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected void handleIntent(Intent intent, String type){
         if (type.startsWith("image/")){
             imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
@@ -262,25 +281,31 @@ public class MainActivity extends AppCompatActivity {
                     showImageIntoView();
                     checkPath();
                 } else if (imageUri.getScheme().startsWith("http")){
-                    //The http uri need to be loaded into a separate thread
-                    new AsyncTask<Void, Void, String>() {
+                    if (checkUrlExtension(imageUri.toString())){
+                        //The http uri need to be loaded into a separate thread
+                        new AsyncTask<Void, Void, String>() {
 
-                        @Override
-                        protected String doInBackground(Void... params) {
-                            handleContentHTTP();
-                            return "";
-                        }
-
-                        @Override
-                        protected void onPostExecute(String s) {
-                            showImageIntoView();
-                            checkPath();
-                            if (fileName == null || fileByteData == null){
-                                //something went wrong while loading, show a message
-                                Toast.makeText(getApplicationContext(), "The provided text must be a file or http URL", Toast.LENGTH_LONG).show();
+                            @Override
+                            protected String doInBackground(Void... params) {
+                                handleContentHTTP();
+                                return "";
                             }
-                        }
-                    }.execute(null, null, null);
+
+                            @Override
+                            protected void onPostExecute(String s) {
+                                showImageIntoView();
+                                checkPath();
+                                if (fileName == null || fileByteData == null){
+                                    //something went wrong while loading, show a message
+                                    Toast.makeText(getApplicationContext(), getString(R.string.errorProtocol), Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        }.execute(null, null, null);
+                    } else {
+                        String errorMessage = String.format(getString(R.string.errorInvalidImage), imageUri.toString());
+                        Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+                        imageUri = null;
+                    }
                 }
             }
         }
@@ -311,18 +336,21 @@ public class MainActivity extends AppCompatActivity {
                 fileName = currentFileName;
             }
         } catch (Exception ex){
-            ACRA.getErrorReporter().handleException(ex);
+            TigerApplication.ShowException(ex);
             Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void handleContentHTTP(){
         try {
-            URL url = new URL(imageUri.toString());
-            InputStream stream = url.openStream();
-            if (stream != null) {
-                fileByteData = Utility.convertStreamToByteData(stream);
+            fileByteData = ServerCaller.downloadFile(imageUri.toString());
+            if (fileByteData != null && fileByteData.length != 0) {
                 fileName =  new File(imageUri.getPath()).getName();
+            } else {
+                imageUri = null;
+                fileName = null;
+                fileByteData = null;
+                Toast.makeText(getApplicationContext(), getString(R.string.errorUnableToDownload), Toast.LENGTH_LONG).show();
             }
         } catch (Exception ex){
             fileByteData = null;
@@ -349,11 +377,16 @@ public class MainActivity extends AppCompatActivity {
     protected void showImageIntoView(){
         if (preferenceManager.isShowPreview()) {
             WebView imgView = (WebView) findViewById(R.id.imgView);
-            if (imageUri != null && imgView != null) {
+            if (imgView != null){
+                imgView.getSettings().setLoadWithOverviewMode(true);
+                imgView.getSettings().setUseWideViewPort(true);
+                imgView.getSettings().setDisplayZoomControls(false);
                 imgView.getSettings().setBuiltInZoomControls(true);
-                imgView.loadUrl(imageUri.toString());
-            } else {
-                imgView.loadUrl("about:blank");
+                if (imageUri != null) {
+                    imgView.loadUrl(imageUri.toString());
+                } else {
+                    imgView.loadUrl("about:blank");
+                }
             }
         }
     }
@@ -371,50 +404,61 @@ public class MainActivity extends AppCompatActivity {
                 //The selection of the tab will trigger the show of the image into the view once visible
                 selectItem(0);
             } else {
-                Toast.makeText(this, "You haven't picked Image", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.errorNoImageSelectedFromGallery), Toast.LENGTH_LONG).show();
             }
             checkPath();
         } catch (Exception ex) {
-            ACRA.getErrorReporter().handleException(ex);
+            TigerApplication.ShowException(ex);
             Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG).show();
         }
 
     }
 
     public void uploadButtonPressed(View v) {
-        // When Image is selected from Gallery
-        if (fileByteData != null) {
-            Button bUpload = (Button)findViewById(R.id.uploadPicture);
-            bUpload.setEnabled(false);
-            prgDialog.setMessage("Converting Image to Binary Data");
-            prgDialog.show();
-            //upload the image
-            uploadWithNotification();
-            bUpload.setEnabled(true);
-        } else {
-            // When Image is not selected from Gallery
-            Toast.makeText(getApplicationContext(), "You must select image from gallery before you try to upload", Toast.LENGTH_LONG).show();
+        try {
+            // When Image is selected from Gallery
+            if (fileByteData != null) {
+                Button bUpload = (Button) findViewById(R.id.uploadPicture);
+                bUpload.setEnabled(false);
+                prgDialog.setMessage(getString(R.string.convertingToBytedataMessage));
+                prgDialog.show();
+                //upload the image
+                uploadWithNotification();
+                bUpload.setEnabled(true);
+            } else {
+                // When Image is not selected from Gallery
+                Toast.makeText(getApplicationContext(), getString(R.string.errorButtonPress), Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception ex){
+            TigerApplication.ShowException(ex);
         }
     }
 
     protected void uploadWithNotification() {
+        //create the notification
         NotificationManager mNotifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
-        mBuilder.setContentTitle("Picture Upload").setContentText("Upload in progress").setSmallIcon(R.mipmap.ic_launcher);
+        mBuilder.setContentTitle(getString(R.string.app_name))
+                .setContentText(getString(R.string.uploadInProgressMessage))
+                    .setSmallIcon(R.drawable.cloud_upload);
         mBuilder.setProgress(10, 3, false);
-        // Displays the progress bar for the first time.
-        mNotifyManager.notify(PermissionHandler.APP_ID, mBuilder.build());
+        Notification buildedNotification = mBuilder.build();
+        buildedNotification.flags |= Notification.FLAG_AUTO_CANCEL;
+        mNotifyManager.notify(PermissionHandler.APP_ID, buildedNotification);
+
+        //call the upload
         uploadImage(mBuilder, mNotifyManager);
     }
 
     protected void uploadImage(final NotificationCompat.Builder mBuilder, final NotificationManager mNotifyManager) {
-        prgDialog.setMessage("Sending File");
+        prgDialog.setMessage(getString(R.string.sendingFileMessage));
         String uploadURL = URLResolver.getUploadPageURL(preferenceManager);
         ServerCaller uploadServer = new ServerCaller(uploadURL){
 
             @Override
             public void onException(Exception ex) {
                 super.onException(ex);
+                mNotifyManager.cancel(PermissionHandler.APP_ID);
                 Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             }
 
@@ -423,23 +467,28 @@ public class MainActivity extends AppCompatActivity {
                 prgDialog.hide();
                 mNotifyManager.cancel(PermissionHandler.APP_ID);
                 if (responseCode == HttpsURLConnection.HTTP_OK) {
-                    ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                    ClipData clip = ClipData.newPlainText("link", response);
-                    clipboard.setPrimaryClip(clip);
-                    Toast.makeText(getApplicationContext(), "Link Copied into the Clipboard: " + response, Toast.LENGTH_LONG).show();
+                    ServerResponse parsedResponse = new ServerResponse(response, MainActivity.this);
+                    if (parsedResponse.isMessageLink()) {
+                        String link = parsedResponse.getResponseMessage();
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        ClipData clip = ClipData.newPlainText("link", link);
+                        clipboard.setPrimaryClip(clip);
+                        String successMessage = String.format(getString(R.string.successMessage), link);
+                        Toast.makeText(getApplicationContext(), successMessage, Toast.LENGTH_LONG).show();
+                    } else {
+                        String errorMessage = String.format(getString(R.string.errorServerMessage), parsedResponse.getResponseMessage());
+                        Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+                    }
                 }
                 else  if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
-                    Toast.makeText(getApplicationContext(), "Requested resource not found", Toast.LENGTH_LONG).show();
-                } else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong at server end", Toast.LENGTH_LONG).show();
-                } else if (responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-                    Toast.makeText(getApplicationContext(), "The request from this app triggered and error: " + response, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.errorServerNotFound), Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(getApplicationContext(), "Error Occurred \n  HTTP Status code : " + responseCode, Toast.LENGTH_LONG).show();
+                    String errorMessage = String.format(getString(R.string.errorServerCode), String.valueOf(responseCode));
+                    Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
                 }
             }
         };
-        int connectionTimeOut = Integer.parseInt(preferenceManager.getValueString(URLResolver.HTTP_TIMEOUT_PREF_KEY));
+        int connectionTimeOut = preferenceManager.getHttpTimeout();
         uploadServer.setConnectionTimeout(connectionTimeOut);
         uploadServer.sendFile(fileByteData, fileName);
     }
@@ -450,7 +499,7 @@ public class MainActivity extends AppCompatActivity {
             informationLabel.setMovementMethod(LinkMovementMethod.getInstance());
 
             TextView spaceLabel = (TextView) findViewById(R.id.spaceControl);
-            spaceLabel.setText("Sending used space request to the server...");
+            spaceLabel.setText(getString(R.string.sendingSpaceRequest));
 
             String sizeURL = URLResolver.getSizePageURL(preferenceManager);
             ServerCaller uploadServer = new ServerCaller(sizeURL) {
@@ -471,11 +520,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             };
-            int connectionTimeOut = Integer.parseInt(preferenceManager.getValueString(URLResolver.HTTP_TIMEOUT_PREF_KEY));
+            int connectionTimeOut = preferenceManager.getHttpTimeout();
             uploadServer.setConnectionTimeout(connectionTimeOut);
             uploadServer.sendCall("");
         } catch (Exception ex){
-            ACRA.getErrorReporter().handleException(ex);
+            TigerApplication.ShowException(ex);
         }
     }
 
@@ -498,7 +547,7 @@ public class MainActivity extends AppCompatActivity {
             Button saveButton = (Button) findViewById(R.id.saveButton);
             saveButton.setOnClickListener(saveSettingListener);
         } catch (Exception ex){
-            ACRA.getErrorReporter().handleException(ex);
+            TigerApplication.ShowException(ex);
         }
     }
 
@@ -536,7 +585,7 @@ public class MainActivity extends AppCompatActivity {
             setTitle(mPlanetTitles[position]);
             mDrawerLayout.closeDrawer(mDrawerList);
         } catch (Exception ex){
-            ACRA.getErrorReporter().handleException(ex);
+            TigerApplication.ShowException(ex);
         }
     }
 }

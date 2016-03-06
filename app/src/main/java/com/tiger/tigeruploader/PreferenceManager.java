@@ -18,6 +18,8 @@ package com.tiger.tigeruploader;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.HashSet;
+
 public class PreferenceManager {
 
     private SharedPreferences preferences;
@@ -25,6 +27,8 @@ public class PreferenceManager {
     private static final String PREF_NAME = "Configuration";
 
     private static final String SHOW_PREVIEW_KEY = "showPreview";
+
+    public final static HashSet<String> ALLOWED_EXTENSIONS = loadAllowedExtensions();
 
     public PreferenceManager(Context context){
         preferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
@@ -50,13 +54,13 @@ public class PreferenceManager {
             editor.putString(URLResolver.SIZE_PAGE_PREF_KEY, URLResolver.DEFAULT_SERVER_SIZE_REMOTE);
             modified = true;
         }
-        String httpTimeout = preferences.getString(URLResolver.SIZE_PAGE_PREF_KEY, null);
-        if (httpTimeout != null){
-            editor.putString(URLResolver.HTTP_TIMEOUT_PREF_KEY, String.valueOf(10000));
+        String httpTimeout = preferences.getString(URLResolver.HTTP_TIMEOUT_PREF_KEY, null);
+        if (httpTimeout == null){
+            editor.putString(URLResolver.HTTP_TIMEOUT_PREF_KEY, String.valueOf(URLResolver.DEFAULT_SERVER_HTTP_TIMEOUT));
             modified = true;
         }
         String showPreview = preferences.getString(SHOW_PREVIEW_KEY, null);
-        if (showPreview != null){
+        if (showPreview == null){
             editor.putString(SHOW_PREVIEW_KEY, String.valueOf(true));
             modified = true;
         }
@@ -83,9 +87,30 @@ public class PreferenceManager {
         } else return true;
     }
 
+    public int getHttpTimeout(){
+        String value = preferences.getString(URLResolver.HTTP_TIMEOUT_PREF_KEY, null);
+        if (value != null){
+           try{
+               return Integer.parseInt(value);
+           } catch (Exception ex){
+               return URLResolver.DEFAULT_SERVER_HTTP_TIMEOUT;
+           }
+        } else return URLResolver.DEFAULT_SERVER_HTTP_TIMEOUT;
+    }
+
     public void setShowPreview(boolean value) {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString(SHOW_PREVIEW_KEY, String.valueOf(value));
         editor.commit();
+    }
+
+    private static HashSet<String> loadAllowedExtensions(){
+        HashSet<String> result = new HashSet<>();
+        result.add("jpeg");
+        result.add("jpg");
+        result.add("png");
+        result.add("bmp");
+        result.add("gif");
+        return result;
     }
 }

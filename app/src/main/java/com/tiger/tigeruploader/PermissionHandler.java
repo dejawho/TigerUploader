@@ -26,17 +26,17 @@ public class PermissionHandler {
     final public static int APP_ID = 135;
 
     public static void checkPermission(String permissionID, AppCompatActivity context) {
-        int hasPermission = ContextCompat.checkSelfPermission(context, permissionID);
-        if (hasPermission != PackageManager.PERMISSION_GRANTED){
-            if (!ActivityCompat.shouldShowRequestPermissionRationale(context, permissionID)) {
-                try {
-                    ActivityCompat.requestPermissions(context, new String[]{permissionID}, APP_ID);
-                } catch (Exception ex){
-                    ex.printStackTrace();
-                    Toast.makeText(context, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+        try {
+            int hasPermission = ContextCompat.checkSelfPermission(context, permissionID);
+            if (hasPermission != PackageManager.PERMISSION_GRANTED){
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(context, permissionID)) {
+                        ActivityCompat.requestPermissions(context, new String[]{permissionID}, APP_ID);
+                    }
+                    return;
                 }
-                return;
-            }
+        } catch (Exception ex){
+            TigerApplication.ShowException(ex);
+            Toast.makeText(context, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
         }
     }
 }

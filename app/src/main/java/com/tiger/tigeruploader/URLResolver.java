@@ -27,13 +27,15 @@ public class URLResolver {
 
     public static final String HTTP_TIMEOUT_PREF_KEY = "httpTimeout";
 
-    public static String DEFAULT_BASE_URL = "your server page";
+    public static String DEFAULT_BASE_URL = "your_server_url";
 
     public static String DEFAULT_SERVER_UPLOAD_REMOTE = "upload_image.php";
 
     public static String DEFAULT_SERVER_GALLERY_REMOTE = "gallery.php";
 
     public static String DEFAULT_SERVER_SIZE_REMOTE = "imagesSize.php";
+
+    public static int DEFAULT_SERVER_HTTP_TIMEOUT = 10000;
 
     protected static String getBaseURL(PreferenceManager preferenceManager){
         String baseUrl = preferenceManager.getValueString(BASE_URL_PREF_KEY);
