@@ -27,7 +27,7 @@ public class URLResolver {
 
     public static final String HTTP_TIMEOUT_PREF_KEY = "httpTimeout";
 
-    public static String DEFAULT_BASE_URL = "your_server_url";
+    public static String DEFAULT_BASE_URL = "your_server";
 
     public static String DEFAULT_SERVER_UPLOAD_REMOTE = "upload_image.php";
 
