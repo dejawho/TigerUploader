@@ -17,9 +17,7 @@ package com.tiger.tigeruploader;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Fragment;
 import android.app.FragmentManager;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.ClipData;
@@ -31,6 +29,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -45,9 +44,9 @@ import android.view.View;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -86,31 +85,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long id) {
             selectItem(position);
-        }
-    };
-
-    private View.OnClickListener saveSettingListener= new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            try {
-                EditText baseURL = (EditText) findViewById(R.id.baseURL);
-                EditText uploadPage = (EditText) findViewById(R.id.uploadPage);
-                EditText galleryPage = (EditText) findViewById(R.id.galleryPage);
-                EditText sizePage = (EditText) findViewById(R.id.sizePage);
-                EditText httpTimeout = (EditText) findViewById(R.id.httpTimeout);
-                CheckBox showPreview = (CheckBox) findViewById(R.id.showPreview);
-
-                preferenceManager.storeValue(URLResolver.BASE_URL_PREF_KEY, baseURL.getText().toString());
-                preferenceManager.storeValue(URLResolver.GALLERY_PAGE_PREF_KEY, galleryPage.getText().toString());
-                preferenceManager.storeValue(URLResolver.HTTP_TIMEOUT_PREF_KEY, httpTimeout.getText().toString());
-                preferenceManager.storeValue(URLResolver.SIZE_PAGE_PREF_KEY, sizePage.getText().toString());
-                preferenceManager.storeValue(URLResolver.UPLOAD_PAGE_PREF_KEY, uploadPage.getText().toString());
-                preferenceManager.setShowPreview(showPreview.isChecked());
-                Toast.makeText(MainActivity.this, getString(R.string.preferencesSaveSuccess), Toast.LENGTH_LONG).show();
-            } catch (Exception ex){
-                TigerApplication.ShowException(ex);
-                Toast.makeText(MainActivity.this, getString(R.string.preferencesSaveError), Toast.LENGTH_LONG).show();
-            }
         }
     };
 
@@ -223,176 +197,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void setTitle(CharSequence title) {
-        mTitle = title;
-        getSupportActionBar().setTitle(mTitle);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Dismiss the progress bar when application is closed
-        if (prgDialog != null) {
-            prgDialog.dismiss();
-        }
-    }
-
-    protected void checkPath(){
-        Button bUpload = (Button)findViewById(R.id.uploadPicture);
-        if (bUpload != null) {
-            if (fileByteData != null) {
-                bUpload.setEnabled(true);
-            } else {
-               bUpload.setEnabled(false);
-            }
-        }
-    }
-
-    protected boolean checkUrlExtension(String url){
-        if(url.contains(".")) {
-            String extension = url.substring(url.lastIndexOf(".") + 1).toLowerCase().trim();
-            if (PreferenceManager.ALLOWED_EXTENSIONS.contains(extension)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected void handleIntent(Intent intent, String type){
-        if (type.startsWith("image/")){
-            imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-            loadImage();
-            showImageIntoView();
-            checkPath();
-        } else if (type.startsWith("text/")){
-            String textPath = intent.getStringExtra(Intent.EXTRA_TEXT);
-            imageUri = Uri.parse(textPath);
-            //Try to found a valid scheme for the text
-            if (imageUri.getScheme() == null){
-                if (new File(textPath).exists()){
-                    imageUri = Uri.parse("file://"+textPath);
-                } else {
-                    imageUri = Uri.parse("http://"+textPath);
-                }
-            }
-            if (imageUri.getScheme() != null){
-                if (imageUri.getScheme().startsWith("file")){
-                    loadImage();
-                    showImageIntoView();
-                    checkPath();
-                } else if (imageUri.getScheme().startsWith("http")){
-                    if (checkUrlExtension(imageUri.toString())){
-                        //The http uri need to be loaded into a separate thread
-                        new AsyncTask<Void, Void, String>() {
-
-                            @Override
-                            protected String doInBackground(Void... params) {
-                                handleContentHTTP();
-                                return "";
-                            }
-
-                            @Override
-                            protected void onPostExecute(String s) {
-                                showImageIntoView();
-                                checkPath();
-                                if (fileName == null || fileByteData == null){
-                                    //something went wrong while loading, show a message
-                                    Toast.makeText(getApplicationContext(), getString(R.string.errorProtocol), Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        }.execute(null, null, null);
-                    } else {
-                        String errorMessage = String.format(getString(R.string.errorInvalidImage), imageUri.toString());
-                        Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
-                        imageUri = null;
-                    }
-                }
-            }
-        }
-    }
-
-    private void handleContentUri(){
-        try {
-            InputStream stream = getContentResolver().openInputStream(imageUri);
-            if (stream != null) {
-                fileByteData = Utility.convertStreamToByteData(stream);
-                String currentFileName = null;
-                //Try to get the name
-                String[] filePathColumn = {MediaStore.Images.Media.DATA};
-                // Get the cursor
-                Cursor cursor = getContentResolver().query(imageUri, filePathColumn, null, null, null);
-                if (cursor != null) {
-                    cursor.moveToFirst();
-                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                    String imgPath = cursor.getString(columnIndex);
-                    cursor.close();
-                    if (imgPath != null) {
-                        currentFileName = new File(imgPath).getName();
-                    }
-                }
-                if (currentFileName == null) {
-                    currentFileName = new File(imageUri.getPath()).getName();
-                }
-                fileName = currentFileName;
-            }
-        } catch (Exception ex){
-            TigerApplication.ShowException(ex);
-            Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void handleContentHTTP(){
-        try {
-            fileByteData = ServerCaller.downloadFile(imageUri.toString());
-            if (fileByteData != null && fileByteData.length != 0) {
-                fileName =  new File(imageUri.getPath()).getName();
-            } else {
-                imageUri = null;
-                fileName = null;
-                fileByteData = null;
-                Toast.makeText(getApplicationContext(), getString(R.string.errorUnableToDownload), Toast.LENGTH_LONG).show();
-            }
-        } catch (Exception ex){
-            fileByteData = null;
-            fileName = null;
-            imageUri = null;
-        }
-    }
-
-    protected void loadImage(){
-        if (imageUri != null) {
-            if ("content".equals(imageUri.getScheme())) {
-                handleContentUri();
-            } else if ("file".equals(imageUri.getScheme())) {
-                String imgPath = imageUri.getPath();
-                File fileResource = new File(imgPath);
-                if (fileResource.exists()){
-                    fileName = fileResource.getName();
-                    fileByteData = Utility.convertFileToByteData(fileResource);
-                }
-            }
-        }
-    }
-
-    protected void showImageIntoView(){
-        if (preferenceManager.isShowPreview()) {
-            WebView imgView = (WebView) findViewById(R.id.imgView);
-            if (imgView != null){
-                imgView.getSettings().setLoadWithOverviewMode(true);
-                imgView.getSettings().setUseWideViewPort(true);
-                imgView.getSettings().setDisplayZoomControls(false);
-                imgView.getSettings().setBuiltInZoomControls(true);
-                if (imageUri != null) {
-                    imgView.loadUrl(imageUri.toString());
-                } else {
-                    imgView.loadUrl("about:blank");
-                }
-            }
-        }
-    }
-
-    // When Image is selected from Gallery
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         try {
@@ -408,23 +212,203 @@ public class MainActivity extends AppCompatActivity {
             }
             checkPath();
         } catch (Exception ex) {
+            resetImage();
             TigerApplication.ShowException(ex);
             Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG).show();
         }
 
     }
 
+    @Override
+    public void setTitle(CharSequence title) {
+        mTitle = title;
+        getSupportActionBar().setTitle(mTitle);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Dismiss the progress bar when application is closed
+        if (prgDialog != null) {
+            prgDialog.dismiss();
+        }
+    }
+
+    protected void checkPath(){
+        FloatingActionButton openPhoto = (FloatingActionButton)findViewById(R.id.buttonAddClosePhoto);
+        FloatingActionButton upload = (FloatingActionButton)findViewById(R.id.buttonUpload);
+        if (openPhoto != null) {
+            if (fileByteData != null) {
+                openPhoto.setBackgroundTintList(getColorStateList(R.color.buttonDisable));
+                openPhoto.setImageResource(R.drawable.ic_close_white_24dp);
+                upload.setVisibility(View.VISIBLE);
+            } else {
+                openPhoto.setBackgroundTintList(getColorStateList(R.color.buttonEnable));
+                openPhoto.setImageResource(R.drawable.ic_add_a_photo_white_24dp);
+                upload.setVisibility(View.INVISIBLE);
+            }
+        }
+    }
+
+    protected boolean checkUrlExtension(String url){
+        if(url.contains(".")) {
+            String extension = url.substring(url.lastIndexOf(".") + 1).toLowerCase().trim();
+            if (PreferenceManager.ALLOWED_EXTENSIONS.contains(extension)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected void handleIntent(Intent intent, String type){
+        try {
+            if (type.startsWith("image/")) {
+                imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                loadImage();
+                showImageIntoView();
+                checkPath();
+            } else if (type.startsWith("text/")) {
+                String textPath = intent.getStringExtra(Intent.EXTRA_TEXT);
+                imageUri = Uri.parse(textPath);
+                //Try to found a valid scheme for the text
+                if (imageUri.getScheme() == null) {
+                    if (new File(textPath).exists()) {
+                        imageUri = Uri.parse("file://" + textPath);
+                    } else {
+                        imageUri = Uri.parse("http://" + textPath);
+                    }
+                }
+                if (imageUri.getScheme() != null) {
+                    if (imageUri.getScheme().startsWith("file")) {
+                        loadImage();
+                        showImageIntoView();
+                        checkPath();
+                    } else if (imageUri.getScheme().startsWith("http")) {
+                        if (checkUrlExtension(imageUri.toString())) {
+                            //The http uri need to be loaded into a separate thread
+                            new AsyncTask<Void, Void, String>() {
+
+                                @Override
+                                protected String doInBackground(Void... params) {
+                                    handleContentHTTP();
+                                    return "";
+                                }
+
+                                @Override
+                                protected void onPostExecute(String s) {
+                                    showImageIntoView();
+                                    checkPath();
+                                    if (fileName == null || fileByteData == null) {
+                                        //something went wrong while loading, show a message
+                                        Toast.makeText(getApplicationContext(), getString(R.string.errorProtocol), Toast.LENGTH_LONG).show();
+                                    }
+                                }
+                            }.execute(null, null, null);
+                        } else {
+                            String errorMessage = String.format(getString(R.string.errorInvalidImage), imageUri.toString());
+                            Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+                            resetImage();
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex){
+            resetImage();
+            TigerApplication.ShowException(ex);
+        }
+    }
+
+    private void handleContentUri() throws Exception{
+        InputStream stream = getContentResolver().openInputStream(imageUri);
+        if (stream != null) {
+            fileByteData = Utility.convertStreamToByteData(stream);
+            String currentFileName = null;
+            //Try to get the name
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+            // Get the cursor
+            Cursor cursor = getContentResolver().query(imageUri, filePathColumn, null, null, null);
+            if (cursor != null) {
+                cursor.moveToFirst();
+                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                String imgPath = cursor.getString(columnIndex);
+                cursor.close();
+                if (imgPath != null) {
+                    currentFileName = new File(imgPath).getName();
+                }
+            }
+            if (currentFileName == null) {
+                currentFileName = new File(imageUri.getPath()).getName();
+            }
+            fileName = currentFileName;
+        }
+    }
+
+    private void handleContentHTTP(){
+        fileByteData = ServerCaller.downloadFile(imageUri.toString());
+        if (fileByteData != null && fileByteData.length != 0) {
+            fileName =  new File(imageUri.getPath()).getName();
+        } else {
+            imageUri = null;
+            fileName = null;
+            fileByteData = null;
+            Toast.makeText(getApplicationContext(), getString(R.string.errorUnableToDownload), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    protected void loadImage() throws  Exception{
+        if (imageUri != null) {
+            if ("content".equals(imageUri.getScheme())) {
+                handleContentUri();
+            } else if ("file".equals(imageUri.getScheme())) {
+                String imgPath = imageUri.getPath();
+                File fileResource = new File(imgPath);
+                if (fileResource.exists()){
+                    fileName = fileResource.getName();
+                    fileByteData = Utility.convertFileToByteData(fileResource);
+                }
+            }
+        }
+    }
+
+    protected void showImageIntoView() {
+        if (preferenceManager.isShowPreview()) {
+            WebView imgView = (WebView) findViewById(R.id.imgView);
+            if (imgView != null) {
+                imgView.getSettings().setLoadWithOverviewMode(true);
+                imgView.getSettings().setUseWideViewPort(true);
+                imgView.getSettings().setDisplayZoomControls(false);
+                imgView.getSettings().setBuiltInZoomControls(true);
+                imgView.setBackgroundColor(getColor(R.color.webViewBackground));
+                if (imageUri != null) {
+                    imgView.loadUrl(imageUri.toString());
+                } else {
+                    imgView.loadUrl("about:blank");
+                }
+            }
+        }
+    }
+
+    public void openButtonPressed(View v){
+        if (fileByteData != null){
+            imageUri = null;
+            fileName = null;
+            fileByteData = null;
+            showImageIntoView();
+            checkPath();
+        } else {
+            Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(galleryIntent, RESULT_LOAD_IMG);
+        }
+    }
+
     public void uploadButtonPressed(View v) {
         try {
             // When Image is selected from Gallery
             if (fileByteData != null) {
-                Button bUpload = (Button) findViewById(R.id.uploadPicture);
-                bUpload.setEnabled(false);
                 prgDialog.setMessage(getString(R.string.convertingToBytedataMessage));
                 prgDialog.show();
                 //upload the image
                 uploadWithNotification();
-                bUpload.setEnabled(true);
             } else {
                 // When Image is not selected from Gallery
                 Toast.makeText(getApplicationContext(), getString(R.string.errorButtonPress), Toast.LENGTH_LONG).show();
@@ -441,31 +425,29 @@ public class MainActivity extends AppCompatActivity {
         mBuilder.setContentTitle(getString(R.string.app_name))
                 .setContentText(getString(R.string.uploadInProgressMessage))
                     .setSmallIcon(R.drawable.cloud_upload);
-        mBuilder.setProgress(10, 3, false);
-        Notification buildedNotification = mBuilder.build();
-        buildedNotification.flags |= Notification.FLAG_AUTO_CANCEL;
-        mNotifyManager.notify(PermissionHandler.APP_ID, buildedNotification);
-
         //call the upload
-        uploadImage(mBuilder, mNotifyManager);
+        uploadImage(mNotifyManager, mBuilder);
     }
 
-    protected void uploadImage(final NotificationCompat.Builder mBuilder, final NotificationManager mNotifyManager) {
+    protected void uploadImage(final NotificationManager notificationManager, final NotificationCompat.Builder notificationBuilder) {
         prgDialog.setMessage(getString(R.string.sendingFileMessage));
         String uploadURL = URLResolver.getUploadPageURL(preferenceManager);
+        final View bUpload = findViewById(R.id.buttonUpload);
         ServerCaller uploadServer = new ServerCaller(uploadURL){
 
             @Override
             public void onException(Exception ex) {
                 super.onException(ex);
-                mNotifyManager.cancel(PermissionHandler.APP_ID);
+                notificationManager.cancel(PermissionHandler.APP_ID);
+                bUpload.setVisibility(View.VISIBLE);
                 Toast.makeText(getApplicationContext(), ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onPostExecute(String response, int responseCode) {
                 prgDialog.hide();
-                mNotifyManager.cancel(PermissionHandler.APP_ID);
+                notificationManager.cancel(PermissionHandler.APP_ID);
+                bUpload.setVisibility(View.VISIBLE);
                 if (responseCode == HttpsURLConnection.HTTP_OK) {
                     ServerResponse parsedResponse = new ServerResponse(response, MainActivity.this);
                     if (parsedResponse.isMessageLink()) {
@@ -476,8 +458,13 @@ public class MainActivity extends AppCompatActivity {
                         String successMessage = String.format(getString(R.string.successMessage), link);
                         Toast.makeText(getApplicationContext(), successMessage, Toast.LENGTH_LONG).show();
                     } else {
-                        String errorMessage = String.format(getString(R.string.errorServerMessage), parsedResponse.getResponseMessage());
-                        Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+                        if (parsedResponse.hasError()){
+                            String errorMessage = String.format(getString(R.string.errorServerMessage), parsedResponse.getError());
+                            Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+                        } else {
+                            String errorMessage = String.format(getString(R.string.errorServerMessage), parsedResponse.getResponseMessage());
+                            Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
                 else  if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
@@ -490,7 +477,8 @@ public class MainActivity extends AppCompatActivity {
         };
         int connectionTimeOut = preferenceManager.getHttpTimeout();
         uploadServer.setConnectionTimeout(connectionTimeOut);
-        uploadServer.sendFile(fileByteData, fileName);
+        bUpload.setVisibility(View.INVISIBLE);
+        uploadServer.sendChunkedFile(fileByteData, fileName, notificationManager, notificationBuilder);
     }
 
     public void showInformation() {
@@ -513,10 +501,14 @@ public class MainActivity extends AppCompatActivity {
                 public void onPostExecute(String response, int responseCode) {
                     TextView spaceLabel = (TextView) findViewById(R.id.spaceControl);
                     if (spaceLabel != null) {
-                        int size = Integer.parseInt(response);
-                        double mbSize = (double) size / 1024 / 1024;
-                        String value = String.format("%.2f", mbSize);
-                        spaceLabel.setText(String.format(getString(R.string.usedSpace), value));
+                        if (responseCode == HttpURLConnection.HTTP_OK) {
+                            int size = Integer.parseInt(response);
+                            double mbSize = (double) size / 1024 / 1024;
+                            String value = String.format("%.2f", mbSize);
+                            spaceLabel.setText(String.format(getString(R.string.usedSpace), value));
+                        } else {
+                            spaceLabel.setText(String.format(getString(R.string.errorSpaceServerCode), String.valueOf(responseCode)));
+                        }
                     }
                 }
             };
@@ -543,11 +535,23 @@ public class MainActivity extends AppCompatActivity {
             sizePage.setText(preferenceManager.getValueString(URLResolver.SIZE_PAGE_PREF_KEY));
             httpTimeout.setText(preferenceManager.getValueString(URLResolver.HTTP_TIMEOUT_PREF_KEY));
             showPreview.setChecked(preferenceManager.isShowPreview());
-
-            Button saveButton = (Button) findViewById(R.id.saveButton);
-            saveButton.setOnClickListener(saveSettingListener);
         } catch (Exception ex){
             TigerApplication.ShowException(ex);
+        }
+    }
+
+    public void switchPage(int index){
+        FrameLayout elementsArea = (FrameLayout)findViewById(R.id.content_frame);
+        if (index == 0) {
+            elementsArea.setBackgroundColor(getColor(R.color.webViewBackground));
+            showImageIntoView();
+            checkPath();
+        } else if (index == 1) {
+            elementsArea.setBackgroundColor(getColor(R.color.otherViewBackground));
+            showSettings();
+        } else if (index == 2) {
+            elementsArea.setBackgroundColor(getColor(R.color.otherViewBackground));
+            showInformation();
         }
     }
 
@@ -555,23 +559,7 @@ public class MainActivity extends AppCompatActivity {
     private void selectItem(int position) {
         try {
             // Create a new fragment and specify the planet to show based on position
-            Fragment fragment = new ViewFragment() {
-
-                @Override
-                public void onViewCreated(View view, Bundle savedInstanceState) {
-                    super.onViewCreated(view, savedInstanceState);
-                    int index = getArguments().getInt(ARG_ENTRY_NUMBER);
-                    if (index == 0) {
-                        showImageIntoView();
-                        checkPath();
-                    } else if (index == 1) {
-                        showSettings();
-                    } else if (index == 2) {
-                        showInformation();
-                    }
-                }
-            };
-
+            ViewFragment fragment = new ViewFragment();
             Bundle args = new Bundle();
             args.putInt(ViewFragment.ARG_ENTRY_NUMBER, position);
             fragment.setArguments(args);
@@ -587,5 +575,16 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception ex){
             TigerApplication.ShowException(ex);
         }
+    }
+
+    public PreferenceManager getPreferenceManager(){
+        return preferenceManager;
+    }
+
+    private void resetImage(){
+        fileByteData = null;
+        fileName = null;
+        imageUri = null;
+        showImageIntoView();
     }
 }

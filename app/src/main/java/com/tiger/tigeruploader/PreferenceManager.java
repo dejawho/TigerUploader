@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import java.util.HashSet;
+import java.util.Objects;
 
 public class PreferenceManager {
 
@@ -71,9 +72,12 @@ public class PreferenceManager {
     }
 
     public void storeValue(String key, String value){
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(key, value);
-        editor.commit();
+        String currentValue = getValueString(key);
+        if (!Utility.safeEquals(currentValue, value)) {
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putString(key, value);
+            editor.commit();
+        }
     }
 
     public String getValueString(String key){

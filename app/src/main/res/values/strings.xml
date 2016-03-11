@@ -20,6 +20,7 @@
     <string name="errorButtonPress">You must load image before you try to upload</string>
     <string name="errorServerMessage">Server has returned the following error: %1$s</string>
     <string name="errorServerCode">Server Error, HTTP code: %1$s</string>
+    <string name="errorSpaceServerCode">Server Error, unable to retrieve the free space from the Server. HTTP code: %1$s</string>
     <string name="errorServerNotFound">Requested resource not found</string>
     <string name="successMessage">Link Copied into the Clipboard: %1$s</string>
     <string name="uploadInProgressMessage">Upload in progress</string>

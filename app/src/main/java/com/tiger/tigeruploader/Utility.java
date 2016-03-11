@@ -79,4 +79,15 @@ public class Utility {
         return String.valueOf(System.currentTimeMillis());
     }
 
+    /**
+     * Determines whether two objects are equal, including <code>null</code> values.
+     *
+     * @param o1
+     * @param o2
+     * @return whether the two objects are equal
+     */
+    public static boolean safeEquals(Object o1, Object o2)
+    {
+        return (o1 == null) ? (o2 == null) : (o2 != null && o1.equals(o2));
+    }
 }

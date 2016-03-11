@@ -27,9 +27,9 @@ public class URLResolver {
 
     public static final String HTTP_TIMEOUT_PREF_KEY = "httpTimeout";
 
-    public static String DEFAULT_BASE_URL = "your_server";
+    public static String DEFAULT_BASE_URL = "http://chuncktest-tigeruploader.rhcloud.com/";
 
-    public static String DEFAULT_SERVER_UPLOAD_REMOTE = "upload_image.php";
+    public static String DEFAULT_SERVER_UPLOAD_REMOTE = "endpoint.php";
 
     public static String DEFAULT_SERVER_GALLERY_REMOTE = "gallery.php";
 

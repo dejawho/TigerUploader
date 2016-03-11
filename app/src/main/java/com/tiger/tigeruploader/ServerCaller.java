@@ -15,7 +15,10 @@
  along with Foobar.  If not, see <http://www.gnu.org/licenses/>.**/
 package com.tiger.tigeruploader;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.os.AsyncTask;
+import android.support.v4.app.NotificationCompat;
 
 
 import java.io.BufferedReader;
@@ -30,6 +33,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -43,11 +48,11 @@ public class ServerCaller {
 
     private int connectionTimeout = 0;
 
-    private static final String crlf = "\r\n";
-
     private static final String twoHyphens = "--";
 
     private static final String boundary =  "*****";
+
+    private  static final String lineEnd = "\r\n";
 
     public ServerCaller(String URL){
         this.URL = URL;
@@ -104,6 +109,191 @@ public class ServerCaller {
     }
 
 
+    public void sendChunkedFile(final byte[] byteData, final String fileName, final NotificationManager notificationManager, final NotificationCompat.Builder notificatonBuilder){
+        new AsyncTask<Void, Void, String>() {
+
+            @Override
+            protected String doInBackground(Void... params) {
+                String uuid = UUID.randomUUID().toString();
+                int chunkSize = 1024 * 512; //1MB
+                int chunkNumber = byteData.length / chunkSize;
+                if (byteData.length % chunkSize != 0) chunkNumber++;
+
+                notificatonBuilder.setProgress(chunkNumber, 1, false);
+                Notification buildNotification = notificatonBuilder.build();
+                buildNotification.flags |= Notification.FLAG_AUTO_CANCEL;
+                notificationManager.notify(PermissionHandler.APP_ID, buildNotification);
+
+                boolean allChunksSent = true;
+                for (int i = 0; i < chunkNumber; i++) {
+                    byte[] chunk = null;
+                    if (i * chunkSize + chunkSize < byteData.length) {
+                        chunk = Arrays.copyOfRange(byteData, i * chunkSize, i * chunkSize + chunkSize);
+                    } else {
+                        chunk = Arrays.copyOfRange(byteData, i * chunkSize, byteData.length);
+                    }
+
+                    DataOutputStream dos = null;
+                    try {
+                        URL url = new URL(ServerCaller.this.URL);
+                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                        conn.disconnect();
+                        conn.setDoInput(true); // Allow Inputs
+                        conn.setDoOutput(true); // Allow Outputs
+                        conn.setUseCaches(false); // Don't use a Cached Copy
+                        conn.setRequestMethod("POST");
+                        conn.setRequestProperty("Connection", "Keep-Alive");
+                        conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+                        conn.setRequestProperty("uploaded_file", fileName);
+
+
+                        dos = new DataOutputStream(conn.getOutputStream());
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        //Adding first parameter
+                        dos.writeBytes("Content-Disposition: form-data; name=\"qqtotalparts\"" + lineEnd);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(String.valueOf(chunkNumber));
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        //adding second parameter
+                        dos.writeBytes("Content-Disposition: form-data; name=\"qquuid\"" + lineEnd);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(uuid);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        //Adding third parameter
+                        dos.writeBytes("Content-Disposition: form-data; name=\"qqtotalfilesize\"" + lineEnd);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(String.valueOf(byteData.length));
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        //Adding fourth parameter
+                        dos.writeBytes("Content-Disposition: form-data; name=\"qqfilename\"" + lineEnd);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(fileName);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        //Adding the part index parameter
+                        dos.writeBytes("Content-Disposition: form-data; name=\"qqpartindex\"" + lineEnd);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(String.valueOf(i));
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        //Adding the current chunk
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+                        dos.writeBytes("Content-Disposition: form-data; name=\"qqfile\";filename=\"" + fileName + "\"" + lineEnd);
+                        dos.writeBytes(lineEnd);
+                        dos.write(chunk);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+                        dos.flush();
+                        dos.close();
+
+                        int chunkResponseCode = conn.getResponseCode();
+                        if (chunkResponseCode == HttpURLConnection.HTTP_OK){
+                            response = "";
+                            String line;
+                            BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                            while ((line=br.readLine()) != null) {
+                                response+=line;
+                            }
+                        } else {
+                            response = "";
+                            String line;
+                            BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                            while ((line=br.readLine()) != null) {
+                                response+=line;
+                            }
+                            allChunksSent = false;
+                            break;
+                        }
+                        conn.disconnect();
+
+                        notificatonBuilder.setProgress(chunkNumber, i + 1, false);
+                        buildNotification = notificatonBuilder.build();
+                        buildNotification.flags |= Notification.FLAG_AUTO_CANCEL;
+                        notificationManager.notify(PermissionHandler.APP_ID, buildNotification);
+                    } catch (Exception ex) {
+                        allChunksSent = false;
+                        onException(ex);
+                        break;
+                    }
+                }
+                if (allChunksSent){
+                    DataOutputStream dos = null;
+                    try {
+                        URL url = new URL(ServerCaller.this.URL + "?done");
+                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                        conn.disconnect();
+                        conn.setDoInput(true); // Allow Inputs
+                        conn.setDoOutput(true); // Allow Outputs
+                        conn.setUseCaches(false); // Don't use a Cached Copy
+                        conn.setRequestMethod("POST");
+                        conn.setRequestProperty("Connection", "Keep-Alive");
+                        conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+                        conn.setRequestProperty("uploaded_file", fileName);
+
+
+                        dos = new DataOutputStream(conn.getOutputStream());
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        //Adding first parameter
+                        dos.writeBytes("Content-Disposition: form-data; name=\"qqtotalparts\"" + lineEnd);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(String.valueOf(chunkNumber));
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        //adding second parameter
+                        dos.writeBytes("Content-Disposition: form-data; name=\"qquuid\"" + lineEnd);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(uuid);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        //Adding third parameter
+                        dos.writeBytes("Content-Disposition: form-data; name=\"qqfilename\"" + lineEnd);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(fileName);
+                        dos.writeBytes(lineEnd);
+                        dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                        dos.flush();
+                        dos.close();
+
+                        responseCode=conn.getResponseCode();
+                        if (responseCode == HttpsURLConnection.HTTP_OK || responseCode == HttpURLConnection.HTTP_BAD_REQUEST) {
+                            response = "";
+                            String line;
+                            BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                            while ((line=br.readLine()) != null) {
+                                response+=line;
+                            }
+                            br.close();
+                        }
+                        conn.disconnect();
+
+                    } catch (Exception ex){
+                        onException(ex);
+                    }
+                }
+                return "";
+            }
+
+            @Override
+            protected void onPostExecute(String msg) {
+                ServerCaller.this.onPostExecute(response, responseCode);
+            }
+
+        }.execute(null, null, null);
+
+    }
     public void sendFile(final byte[] byteData, final String fileName){
         new AsyncTask<Void, Void, String>() {
 
@@ -112,6 +302,7 @@ public class ServerCaller {
                 try {
                     java.net.URL url = new URL(ServerCaller.this.URL);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.connect();
                     conn.setConnectTimeout(connectionTimeout);
                     conn.setUseCaches(false);
                     conn.setDoOutput(true);
@@ -122,13 +313,13 @@ public class ServerCaller {
                     conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
                     DataOutputStream request = new DataOutputStream(conn.getOutputStream());
 
-                    request.writeBytes(twoHyphens + boundary + crlf);
-                    request.writeBytes("Content-Disposition: form-data; name=\"fileToUpload\";filename=\"" + fileName + "\"" + crlf);
-                    request.writeBytes(crlf);
+                    request.writeBytes(twoHyphens + boundary + lineEnd);
+                    request.writeBytes("Content-Disposition: form-data; name=\"fileToUpload\";filename=\"" + fileName + "\"" + lineEnd);
+                    request.writeBytes(lineEnd);
 
                     request.write(byteData);
-                    request.writeBytes(crlf);
-                    request.writeBytes(twoHyphens + boundary + twoHyphens + crlf);
+                    request.writeBytes(lineEnd);
+                    request.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
                     request.flush();
                     request.close();
 

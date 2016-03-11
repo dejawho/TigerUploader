@@ -13,27 +13,56 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical"
-    android:theme="@style/AppTheme">
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="4dp" />
-
-    <WebView
-        android:id="@+id/imgView"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" >
-    </WebView>
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:theme="@style/AppTheme"
+        android:id="@+id/uploadAreaLayout">
 
-    <Button
-    android:id="@+id/uploadPicture"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:onClick="uploadButtonPressed"
-    android:text="Upload" />
-</LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="4dp" />
+
+        <WebView
+            android:id="@+id/imgView"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" >
+        </WebView>
+
+    </LinearLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/buttonAddClosePhoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:onClick="openButtonPressed"
+        android:src="@drawable/ic_add_a_photo_white_24dp" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/buttonUpload"
+        android:onClick="uploadButtonPressed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left|bottom|end"
+        android:layout_marginBottom="0dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="-25dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="0dp"
+        android:src="@drawable/cloud_upload"
+        app:layout_anchor="@id/buttonAddClosePhoto"
+        app:layout_anchorGravity="left" />
+
+</android.support.design.widget.CoordinatorLayout>

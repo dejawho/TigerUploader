@@ -21,15 +21,18 @@ public class ServerResponse {
 
     public enum RESPONSE_TYPE{OK, DUPLICATED, NOT_AN_IMAGE, WRONG_EXTENSION, UNDELETABLE_DUPLICATE, UPLOAD_ERROR, UNKNOWN_CODE, UNPARSABLE_RESPONSE}
 
-    private RESPONSE_TYPE responseType;
+    private RESPONSE_TYPE responseType = RESPONSE_TYPE.UNPARSABLE_RESPONSE;
 
-    private String message;
+    private String message = null;
+
+    private String error = null;
 
     public ServerResponse(String jsonMessage, Context currentContex){
         try{
             JSONObject parsedResponse = new JSONObject(jsonMessage);
             int responseCode = parsedResponse.getInt("ResponseCode");
-            message = parsedResponse.getString("ResponseMessage");
+            if (parsedResponse.has("ResponseMessage")) message = parsedResponse.getString("ResponseMessage");
+            if (parsedResponse.has("error")) error = parsedResponse.getString("error");
             switch (responseCode){
                 case RESPONSE_NO_ERROR:
                     responseType = RESPONSE_TYPE.OK;
@@ -68,8 +71,17 @@ public class ServerResponse {
         return message;
     }
 
+    public String getError(){
+        return error;
+    }
+
+    public boolean hasError(){
+        return error != null && !error.trim().isEmpty();
+    }
+
     public boolean isMessageLink(){
-        return getResponseType().equals(RESPONSE_TYPE.OK) || getResponseType().equals(RESPONSE_TYPE.DUPLICATED);
+        boolean hasError = hasError();
+        return !hasError && (getResponseType().equals(RESPONSE_TYPE.OK) || getResponseType().equals(RESPONSE_TYPE.DUPLICATED));
     }
 
 }
